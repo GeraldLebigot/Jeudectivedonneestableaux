@@ -1,0 +1,2160 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full bg-amber-50/40">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Détective des Données - Mathématiques Cycle 2</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Polices enfantines Google Fonts : Fredoka (jeux) & Comic Neue (écriture manuscrite) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:ital,wght@0,400;0,700;1,400&family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Configuration de la charte de couleurs scolaires pour Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        chalkboard: {
+                            green: '#1e4620',
+                            feltYellow: '#fef08a',
+                            pencilBlue: '#0284c7',
+                            wood: '#d97706',
+                            ink: '#1e293b'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Fredoka', 'Comic Neue', 'Comic Sans MS', 'cursive', 'sans-serif'],
+                        handwritten: ['Comic Neue', 'Comic Sans MS', 'cursive', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        /* Texture papier à carreaux de cahier d'écolier (Seyès / petits carreaux) */
+        .cahier-grid {
+            background-color: #fffdf5;
+            background-image: 
+                linear-gradient(rgba(14, 165, 233, 0.15) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(14, 165, 233, 0.15) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* Effet d'écriture crayonnée ou feutre */
+        .text-feutre {
+            text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Animations dynamiques ludiques */
+        .transition-fun {
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .bounce-in {
+            animation: bounceIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            70% { transform: scale(0.9); opacity: 0.9; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Chutes de gommettes et bouts de papiers découpés */
+        .papillote {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            animation: fall 2.5s linear infinite;
+        }
+        @keyframes fall {
+            0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* Bordure irrégulière façon papier déchiré ou cartonné */
+        .sketch-border {
+            border: 4px solid #475569;
+            border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+        }
+        
+        .sketch-border-light {
+            border: 3px solid #64748b;
+            border-radius: 12px 24px 12px 24px/24px 12px 24px 12px;
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col justify-between text-slate-800 antialiased overflow-x-hidden select-none bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:16px_16px]">
+
+    <!-- Écran de Configuration Initiale Enseignant -->
+    <div id="setup-screen" class="hidden flex-grow flex flex-col justify-center items-center px-4 py-8 relative">
+        <div class="max-w-md w-full bg-amber-100/40 p-1 sm:p-2 rounded-[2rem] shadow-2xl rotate-[0.5deg]">
+            <div class="bg-white rounded-[1.8rem] p-6 sm:p-8 border-4 border-amber-900/80 text-center flex flex-col items-center">
+                <div class="relative w-16 h-16 mb-4 flex items-center justify-center bg-sky-100 rounded-full border-4 border-sky-800 shadow-inner">
+                    <span class="text-3xl">🔑</span>
+                </div>
+                <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 mb-1 leading-none">
+                    Configuration Enseignant
+                </h1>
+                <p class="text-slate-600 font-handwritten text-sm sm:text-base mb-6 font-bold">
+                    Créez votre mot de passe et votre indice avant de confier l'application aux élèves.
+                </p>
+
+                <div class="w-full text-left space-y-4 mb-6">
+                    <div>
+                        <label for="setup-password" class="block font-bold text-slate-700 text-sm mb-1">
+                            Mot de passe enseignant :
+                        </label>
+                        <input type="password" id="setup-password" placeholder="Ex: ClasseCE1" class="w-full bg-white border-2 border-slate-400 rounded-xl px-3 py-2 text-lg font-bold text-slate-800">
+                    </div>
+                    <div>
+                        <label for="setup-hint" class="block font-bold text-slate-700 text-sm mb-1">
+                            Indice de récupération :
+                        </label>
+                        <input type="text" id="setup-hint" placeholder="Ex: La couleur du ciel..." class="w-full bg-white border-2 border-slate-400 rounded-xl px-3 py-2 text-base font-handwritten font-bold text-slate-800">
+                    </div>
+                    <p id="setup-error" class="text-red-600 text-xs font-bold hidden flex items-center gap-1">
+                        <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> Veuillez remplir les deux champs !
+                    </p>
+                </div>
+
+                <button onclick="saveSetup()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-3.5 px-6 rounded-2xl border-b-4 border-sky-800 shadow-md transition-fun flex items-center justify-center gap-2 text-lg">
+                    <span>Enregistrer et démarrer</span>
+                    <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Écran d'accueil -->
+    <div id="welcome-screen" class="hidden flex-grow flex flex-col justify-center items-center px-4 py-8 relative">
+        <div class="absolute top-4 right-4 z-20">
+            <button onclick="openTeacherModal()" class="bg-amber-100 hover:bg-amber-200 text-amber-900 border-2 border-amber-800 font-bold px-4 py-2 rounded-xl text-sm transition-fun shadow flex items-center gap-2">
+                <i data-lucide="key" class="w-4 h-4"></i>
+                <span>Espace Maître / Maîtresse</span>
+            </button>
+        </div>
+
+        <div class="absolute top-8 left-8 rotate-[-12deg] hidden md:block opacity-60">
+            <div class="bg-amber-100 p-3 sketch-border-light shadow-md font-handwritten text-xs text-slate-600">🎒 Rentrée des classes</div>
+        </div>
+        <div class="absolute bottom-8 right-12 rotate-[8deg] hidden md:block opacity-60">
+            <div class="bg-blue-100 p-3 sketch-border-light shadow-md font-handwritten text-xs text-slate-600">✏️ Vive les maths !</div>
+        </div>
+
+        <div class="max-w-xl w-full bg-amber-100/40 p-1 sm:p-2 rounded-[2rem] shadow-2xl rotate-[-0.5deg]">
+            <div class="bg-white rounded-[1.8rem] p-6 sm:p-8 border-4 border-amber-900/80 text-center flex flex-col items-center">
+                
+                <!-- Mascotte crayon de papier -->
+                <div class="relative w-20 h-20 mb-4 flex items-center justify-center bg-yellow-200 rounded-full border-4 border-amber-900 shadow-inner bounce-in">
+                    <span class="text-4xl">✏️</span>
+                    <div class="absolute -top-1 -right-1 bg-red-400 text-white rounded-full p-1 border-2 border-amber-900">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5 animate-spin"></i>
+                    </div>
+                </div>
+
+                <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-amber-900 mb-1 leading-none">
+                    Détective des Données !
+                </h1>
+                <p class="text-slate-600 font-handwritten text-base sm:text-lg mb-4">
+                    Aide nos gentils animaux à compter et à ranger en lisant les tableaux et les graphiques.
+                </p>
+
+                <!-- Zone d'écriture du prénom -->
+                <div class="w-full text-left bg-[#fffdf5] border-4 border-amber-500 p-4 rounded-2xl mb-4 relative shadow-inner">
+                    <label for="student-name" class="block font-bold text-amber-900 text-sm mb-1 flex items-center gap-1.5">
+                        <i data-lucide="user" class="w-4 h-4 text-amber-700"></i>
+                        <span>Écris ton prénom d'écolier :</span>
+                    </label>
+                    <input type="text" id="student-name" placeholder="Ex: Chloé, Nathan..." class="w-full bg-white border-2 border-slate-400 rounded-xl px-3 py-2 text-lg font-handwritten focus:outline-none focus:border-amber-500 font-bold text-slate-800">
+                    <p id="name-warning" class="text-red-600 text-xs font-bold mt-1 hidden flex items-center gap-1">
+                        <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> Écris d'abord ton prénom pour commencer !
+                    </p>
+                </div>
+
+                <!-- Zone de sélection de difficulté -->
+                <div class="w-full text-left bg-[#fffdf5] border-4 border-dashed border-sky-400/80 p-4 rounded-2xl mb-4 relative">
+                    <h3 class="font-bold text-sky-800 text-sm flex items-center gap-2 mb-2">
+                        <i data-lucide="gauge" class="w-5 h-5 text-sky-700"></i>
+                        <span>Choisis ton niveau d'enquête :</span>
+                    </h3>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button type="button" onclick="selectDifficulty('facile')" id="btn-facile" class="difficulty-btn p-2 rounded-xl border-3 border-slate-300 bg-white font-extrabold text-xs sm:text-sm text-center transition-fun flex flex-col items-center gap-1 hover:bg-emerald-50 active:scale-95">
+                            <span class="text-xl">🟢</span>
+                            <span class="text-emerald-700">Facile</span>
+                            <span class="text-[9px] text-slate-500 font-normal">Niveau CP</span>
+                        </button>
+                        <button type="button" onclick="selectDifficulty('normale')" id="btn-normale" class="difficulty-btn p-2 rounded-xl border-3 border-slate-300 bg-white font-extrabold text-xs sm:text-sm text-center transition-fun flex flex-col items-center gap-1 hover:bg-amber-50 active:scale-95">
+                            <span class="text-xl">🟡</span>
+                            <span class="text-amber-700">Normale</span>
+                            <span class="text-[9px] text-slate-500 font-normal">Niveau CE1</span>
+                        </button>
+                        <button type="button" onclick="selectDifficulty('difficile')" id="btn-difficile" class="difficulty-btn p-2 rounded-xl border-3 border-slate-300 bg-white font-extrabold text-xs sm:text-sm text-center transition-fun flex flex-col items-center gap-1 hover:bg-red-50 active:scale-95">
+                            <span class="text-xl">🔴</span>
+                            <span class="text-red-700">Difficile</span>
+                            <span class="text-[9px] text-slate-500 font-normal">Niveau CE2</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <button onclick="tryStartGame()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-4 px-6 rounded-2xl border-b-4 border-amber-700 shadow-md transition-fun transform hover:-translate-y-1 active:translate-y-0 text-lg flex items-center justify-center gap-2">
+                    <span>Ouvrir mon cahier d'enquête</span>
+                    <i data-lucide="book-open" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Écran principal du jeu -->
+    <div id="game-screen" class="hidden flex-grow flex flex-col relative">
+        <header class="bg-[#fffdf5] border-b-4 border-amber-900/20 px-4 py-4 sm:px-6 relative z-10">
+            <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-b from-amber-200 to-transparent opacity-60"></div>
+            
+            <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <button onclick="showExitConfirmation()" class="bg-red-100 hover:bg-red-200 text-red-600 transition-colors p-2 rounded-xl border-2 border-red-300">
+                        <i data-lucide="log-out" class="w-5 h-5"></i>
+                    </button>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span id="difficulty-badge" class="text-xs border px-2.5 py-0.5 rounded-full font-bold"></span>
+                            <span id="current-player-tag" class="text-xs bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full font-handwritten font-bold"></span>
+                        </div>
+                        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-1" id="level-title">
+                            Enquête 1/5
+                        </h2>
+                    </div>
+                </div>
+
+                <!-- Jauge de progression style crayon à papier coloré -->
+                <div class="flex items-center gap-3 w-full sm:w-1/3">
+                    <span class="text-xl">✏️</span>
+                    <div class="flex-grow bg-slate-200 h-6 rounded-lg overflow-hidden border-2 border-slate-400/80 p-0.5 relative">
+                        <div id="progress-bar" class="bg-gradient-to-r from-sky-400 to-sky-500 h-full rounded-md transition-all-custom" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Gommettes étoiles gagnées -->
+                <div class="flex items-center gap-1.5 bg-yellow-50 border-2 border-dashed border-yellow-400/60 px-4 py-1.5 rounded-2xl" id="stars-container">
+                    <!-- Généré en JS -->
+                </div>
+            </div>
+        </header>
+
+        <!-- Zone d'exercice -->
+        <main class="flex-grow max-w-5xl w-full mx-auto px-4 py-6 flex flex-col md:grid md:grid-cols-12 gap-6 items-stretch">
+            
+            <!-- Colonne Gauche : Le Cahier d'activité à grands carreaux -->
+            <section class="md:col-span-7 bg-[#fffdf5] rounded-3xl p-4 sm:p-6 shadow-lg border-4 border-slate-700 relative overflow-hidden min-h-[300px] sm:min-h-[400px] cahier-grid flex flex-col justify-center items-center">
+                <div class="absolute top-0 bottom-0 left-[35px] sm:left-[45px] w-[2px] bg-red-400/70 pointer-events-none"></div>
+                
+                <div id="visual-container" class="w-full h-full pl-6 sm:pl-10 flex items-center justify-center">
+                    <!-- Le tableau ou diagramme "dessiné" -->
+                </div>
+            </section>
+
+            <!-- Colonne Droite : Consigne collée et réponses -->
+            <section class="md:col-span-5 flex flex-col justify-between gap-6">
+                <div class="bg-amber-100 rounded-2xl p-5 sm:p-6 shadow-md border-2 border-amber-300 relative rotate-[0.5deg]">
+                    <div class="absolute -top-3 left-6 w-16 h-5 bg-sky-200/50 border border-sky-300/60 rotate-[-4deg]"></div>
+                    
+                    <div class="inline-flex items-center gap-1.5 bg-amber-200 text-amber-900 text-xs font-bold px-3 py-1 rounded-full mb-3">
+                        <i data-lucide="help-circle" class="w-4 h-4 text-amber-800"></i>
+                        <span>QUESTION DE L'ENQUÊTE</span>
+                    </div>
+                    <p id="instruction-text" class="text-lg sm:text-xl font-handwritten text-slate-800 leading-snug font-bold">
+                        <!-- Texte de consigne -->
+                    </p>
+                </div>
+
+                <div class="flex-grow flex flex-col justify-end space-y-4" id="options-container">
+                    <!-- Boutons de réponses générés dynamiquement -->
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Bandeau de rétroaction (Feedback) -->
+        <footer id="feedback-bar" class="hidden bg-white border-t-4 border-slate-700 p-4 sm:p-6 sticky bottom-0 z-10">
+            <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-4 text-center sm:text-left">
+                    <div id="feedback-icon-container" class="w-14 h-14 rounded-full flex items-center justify-center shrink-0 mx-auto sm:mx-0 border-4 border-slate-800">
+                        <!-- Icône dynamique -->
+                    </div>
+                    <div>
+                        <h4 id="feedback-title" class="text-2xl font-extrabold text-slate-900 leading-none">Bravo !</h4>
+                        <p id="feedback-message" class="text-base font-handwritten text-slate-600 font-bold mt-1">C'est la bonne réponse.</p>
+                    </div>
+                </div>
+                <button id="next-button" class="w-full sm:w-auto text-white font-extrabold py-4 px-8 rounded-2xl text-lg shadow-md border-b-4 transition-fun flex items-center justify-center gap-2">
+                    <span>Niveau Suivant</span>
+                    <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Écran de Félicitations Finales -->
+    <div id="end-screen" class="hidden flex-grow flex flex-col justify-center items-center px-4 py-8 relative">
+        <div id="confetti-wrapper" class="absolute inset-0 pointer-events-none overflow-hidden"></div>
+        
+        <div class="max-w-md w-full bg-amber-50 p-1 rounded-[2.5rem] shadow-2xl rotate-[1.5deg]">
+            <div class="bg-white rounded-[2.3rem] p-8 border-4 border-amber-900/80 text-center relative z-10 flex flex-col items-center">
+                <div class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-yellow-200 text-yellow-600 mb-6 border-4 border-amber-900 shadow-inner animate-bounce">
+                    <i data-lucide="party-popper" class="w-12 h-12"></i>
+                </div>
+                
+                <h1 class="text-4xl font-extrabold tracking-tight text-amber-900 mb-2 leading-none">Tu as gagné !</h1>
+                <p id="victory-phrase" class="text-slate-600 font-handwritten text-lg mb-6 font-bold">
+                    Toutes tes enquêtes ont été résolues avec succès. Tu as gagné tes gommettes d'or !
+                </p>
+                
+                <!-- Résumé des étoiles -->
+                <div class="flex justify-center gap-2 bg-yellow-50 px-6 py-3 rounded-2xl border-4 border-dashed border-yellow-300 mb-8" id="end-stars">
+                    <!-- Étoiles JS -->
+                </div>
+
+                <button onclick="restartGame()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 px-6 rounded-2xl border-b-4 border-emerald-700 shadow-lg transition-fun flex items-center justify-center gap-2 text-lg">
+                    <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                    <span>Recommencer un jeu</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation de sortie -->
+    <div id="exit-modal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-[#fffdf5] rounded-3xl p-6 max-w-sm w-full shadow-2xl border-4 border-slate-700 bounce-in text-center relative">
+            <div class="w-14 h-14 rounded-full bg-orange-100 border-4 border-orange-400 text-orange-500 flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="alert-circle" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 mb-2">Fermer ton cahier ?</h3>
+            <p class="text-slate-600 font-handwritten text-base font-bold mb-6">Si tu pars maintenant, tu perdras tes gommettes en cours ! Tu restes avec nous ?</p>
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="hideExitConfirmation()" class="bg-amber-400 hover:bg-amber-500 text-amber-950 font-extrabold py-3 px-4 rounded-xl border-b-4 border-amber-600 transition-fun text-sm">
+                    Continuer à jouer
+                </button>
+                <button onclick="exitGame()" class="bg-red-500 hover:bg-red-600 text-white font-extrabold py-3 px-4 rounded-xl border-b-4 border-red-700 transition-fun text-sm">
+                    Oui, partir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de reprise de partie en cours -->
+    <div id="resume-modal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-[#fffdf5] rounded-3xl p-6 max-w-sm w-full shadow-2xl border-4 border-slate-700 bounce-in text-center relative">
+            <div class="w-14 h-14 rounded-full bg-sky-100 border-4 border-sky-400 text-sky-500 flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="sparkles" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 mb-2">Continuer ton enquête ?</h3>
+            <p id="resume-modal-text" class="text-slate-600 font-handwritten text-base font-bold mb-6">Tu as une partie commencée il y a moins de 48 heures. Veux-tu la terminer ?</p>
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="discardSavedSession()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-extrabold py-3 px-4 rounded-xl transition-fun text-sm">
+                    Recommencer
+                </button>
+                <button onclick="resumeSavedSession()" class="bg-amber-400 hover:bg-amber-500 text-amber-950 font-extrabold py-3 px-4 rounded-xl border-b-4 border-amber-600 transition-fun text-sm">
+                    Oui, continuer !
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal d'identification Enseignant -->
+    <div id="teacher-auth-modal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border-4 border-amber-900/80 text-center relative">
+            <div class="w-14 h-14 rounded-full bg-amber-100 border-4 border-amber-600 text-amber-800 flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="lock" class="w-7 h-7"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 mb-2">Espace Enseignant</h3>
+            <p class="text-slate-600 text-sm mb-4">Saisis le code secret pour accéder au registre de la classe :</p>
+            <input type="password" id="teacher-code" placeholder="Code secret..." class="w-full text-center tracking-widest bg-[#fffdf5] border-2 border-slate-400 rounded-xl px-3 py-2 text-lg font-bold mb-2">
+            <p id="auth-error" class="text-red-600 text-xs font-bold mb-4 hidden">Oups ! Ce n'est pas le bon code.</p>
+            
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="closeTeacherModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-extrabold py-2.5 px-4 rounded-xl transition-fun text-sm">
+                    Retour
+                </button>
+                <button onclick="submitTeacherCode()" class="bg-amber-500 hover:bg-amber-600 text-white font-extrabold py-2.5 px-4 rounded-xl border-b-4 border-amber-700 transition-fun text-sm">
+                    Valider
+                </button>
+            </div>
+            <p class="text-[11px] text-slate-500 font-handwritten mt-4">Indice de récupération : <span id="teacher-hint-display" class="font-bold text-slate-700"></span></p>
+        </div>
+    </div>
+
+    <!-- Panneau des Scores / Registre de la classe -->
+    <div id="teacher-dashboard" class="hidden fixed inset-0 bg-amber-50/90 z-40 overflow-y-auto p-4 sm:p-8">
+        <div class="max-w-4xl mx-auto bg-white rounded-3xl border-4 border-amber-900/80 shadow-2xl p-6 relative">
+            
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-4 border-dashed border-amber-200 pb-4 mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center text-amber-800 border-2 border-amber-600">
+                        <i data-lucide="graduation-cap" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900">Registre des Évaluations</h2>
+                        <p class="text-slate-500 font-handwritten text-sm">Suivi des données d'enquêtes de la classe</p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="exportToExcel()" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border-2 border-emerald-300 font-bold px-4 py-2 rounded-xl text-sm transition-fun flex items-center gap-2">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        <span>Exporter vers Excel</span>
+                    </button>
+                    <button onclick="clearScores()" class="bg-red-100 hover:bg-red-200 text-red-700 border-2 border-red-300 font-bold px-4 py-2 rounded-xl text-sm transition-fun flex items-center gap-2">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        <span>Vider le registre</span>
+                    </button>
+                    <button onclick="closeTeacherDashboard()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 border-2 border-slate-300 font-bold px-4 py-2 rounded-xl text-sm transition-fun flex items-center gap-2">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                        <span>Fermer</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tableau des scores -->
+            <div class="overflow-x-auto bg-[#fffdf5] rounded-2xl border-2 border-slate-300 shadow-inner">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-amber-100/50 border-b-2 border-slate-300">
+                            <th class="p-4 text-slate-700 font-bold text-sm">Prénom de l'élève</th>
+                            <th class="p-4 text-slate-700 font-bold text-sm">Difficulté</th>
+                            <th class="p-4 text-slate-700 font-bold text-sm">Date de l'enquête</th>
+                            <th class="p-4 text-slate-700 font-bold text-sm text-center">Score obtenu</th>
+                            <th class="p-4 text-slate-700 font-bold text-sm">Performance</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scores-table-body" class="divide-y divide-slate-200 font-handwritten text-base font-bold">
+                        <!-- Rempli en JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="no-scores-message" class="text-center py-12 text-slate-400 font-handwritten text-lg hidden">
+                Aucun élève n'a encore validé sa grille d'enquêtes pour le moment !
+            </div>
+        </div>
+    </div>
+
+    <!-- --- MODULES FIREBASE --- -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, addDoc, collection, getDocs, deleteDoc, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        let db = null;
+        let auth = null;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'detective-donnees-c2';
+
+        // Initialisation de Firebase
+        async function initFirebase() {
+            try {
+                if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                    const firebaseConfig = JSON.parse(__firebase_config);
+                    const app = initializeApp(firebaseConfig);
+                    db = getFirestore(app);
+                    auth = getAuth(app);
+
+                    // Authentification requise avant toute requête (RÈGLE 3)
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                    console.log("Firebase connecté de manière sécurisée.");
+                }
+            } catch (e) {
+                console.error("Impossible de joindre Firebase, passage en mode mémoire locale :", e);
+            }
+        }
+
+        // Sauvegarder un score
+        async function saveScoreToFirebase(playerName, difficulty, score) {
+            const scoreData = {
+                name: playerName,
+                difficulty: difficulty,
+                score: score,
+                total: 5,
+                timestamp: new Date().toISOString()
+            };
+
+            // Sauvegarde locale au cas où Firebase ne soit pas disponible
+            const localScores = JSON.parse(localStorage.getItem('detective_scores_v2') || '[]');
+            localScores.push(scoreData);
+            localStorage.setItem('detective_scores_v2', JSON.stringify(localScores));
+
+            if (!db || !auth || !auth.currentUser) return;
+
+            try {
+                // RÈGLE 1 : Path strict requis
+                const scoreCollection = collection(db, 'artifacts', appId, 'public', 'data', 'scores');
+                await addDoc(scoreCollection, scoreData);
+                console.log("Score enregistré avec succès sur la base !");
+            } catch (e) {
+                console.error("Erreur d'envoi du score : ", e);
+            }
+        }
+
+        // Récupérer tous les scores
+        async function fetchScoresFromFirebase() {
+            let scoresList = [];
+
+            // Récupérer et nettoyer les scores locaux (durée de vie maximale : 48 heures)
+            const localScores = JSON.parse(localStorage.getItem('detective_scores_v2') || '[]');
+            const now = new Date().getTime();
+            const fortyEightHoursInMs = 48 * 60 * 60 * 1000;
+            
+            const activeLocalScores = localScores.filter(score => {
+                const scoreTime = new Date(score.timestamp).getTime();
+                return (now - scoreTime) < fortyEightHoursInMs;
+            });
+            
+            // On ré-enregistre la liste nettoyée
+            localStorage.setItem('detective_scores_v2', JSON.stringify(activeLocalScores));
+            scoresList = [...activeLocalScores];
+
+            if (db && auth && auth.currentUser) {
+                try {
+                    // RÈGLE 1 & 2 : Requêtes simples, filtrage côté JS
+                    const scoreCollection = collection(db, 'artifacts', appId, 'public', 'data', 'scores');
+                    const snapshot = await getDocs(scoreCollection);
+                    const dbScores = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    
+                    // Nettoyage équivalent des scores distants pour le tableau de bord local
+                    const activeDbScores = dbScores.filter(score => {
+                        const scoreTime = new Date(score.timestamp).getTime();
+                        return (now - scoreTime) < fortyEightHoursInMs;
+                    });
+                    
+                    if (activeDbScores.length > 0) {
+                        scoresList = activeDbScores;
+                    }
+                } catch (e) {
+                    console.error("Erreur d'accès à la base de données : ", e);
+                }
+            }
+
+            // Trier par date décroissante
+            scoresList.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            return scoresList;
+        }
+
+        // Vider la base de données de scores
+        async function clearAllScores() {
+            localStorage.setItem('detective_scores_v2', '[]');
+
+            if (!db || !auth || !auth.currentUser) return;
+
+            try {
+                const scoreCollection = collection(db, 'artifacts', appId, 'public', 'data', 'scores');
+                const snapshot = await getDocs(scoreCollection);
+                
+                // Supprimer un par un
+                const deletePromises = snapshot.docs.map(document => deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'scores', document.id)));
+                await Promise.all(deletePromises);
+                console.log("Base de données des scores vidée.");
+            } catch (e) {
+                console.error("Erreur d'effacement de la base : ", e);
+            }
+        }
+
+        // Exposer les fonctions Firebase au scope de la fenêtre
+        window.initFirebase = initFirebase;
+        window.saveScoreToFirebase = saveScoreToFirebase;
+        window.fetchScoresFromFirebase = fetchScoresFromFirebase;
+        window.clearAllScores = clearAllScores;
+
+        // Initier Firebase directement
+        initFirebase();
+    </script>
+
+    <!-- Script de logique pédagogique et technique -->
+    <script>
+        // Gestionnaire d'effets sonores natifs utilisant l'API Web Audio
+        const SoundEffects = {
+            ctx: null,
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            },
+            playSuccess() {
+                try {
+                    this.init();
+                    const now = this.ctx.currentTime;
+                    // Arpège ascendant majeur de réussite (Do, Mi, Sol, Do octave sup)
+                    const notes = [261.63, 329.63, 392.00, 523.25]; 
+                    notes.forEach((freq, index) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, now + index * 0.08);
+                        
+                        gain.gain.setValueAtTime(0.15, now + index * 0.08);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + index * 0.08 + 0.4);
+                        
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        
+                        osc.start(now + index * 0.08);
+                        osc.stop(now + index * 0.08 + 0.5);
+                    });
+                } catch (e) {
+                    console.warn("Audio non supporté ou bloqué par le navigateur :", e);
+                }
+            },
+            playError() {
+                try {
+                    this.init();
+                    const now = this.ctx.currentTime;
+                    // Double note descendante rigolote
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(160, now);
+                    osc.frequency.exponentialRampToValueAtTime(100, now + 0.3);
+                    
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                    
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    
+                    osc.start(now);
+                    osc.stop(now + 0.35);
+                } catch (e) {
+                    console.warn("Audio non supporté ou bloqué par le navigateur :", e);
+                }
+            }
+        };
+
+        // --- BANQUE DE QUESTIONS DE DONNÉES (40 Questions réparties par difficulté) ---
+        const questionPool = [
+            // ================== FACILE (14 QUESTIONS) ==================
+            {
+                difficulty: "facile",
+                title: "Les fruits d'Arthur",
+                instruction: "Regarde le tableau des fruits préférés des élèves. Combien d'élèves adorent la Pomme ?",
+                type: "table_simple",
+                visual: {
+                    headers: ["Fruit de la ferme", "Nombre d'enfants"],
+                    rows: [
+                        ["🍌 Banane", "5 enfants"],
+                        ["🍎 Pomme", "8 enfants"],
+                        ["🍓 Fraise", "6 enfants"],
+                        ["🍊 Orange", "3 enfants"]
+                    ],
+                    accentRow: 1
+                },
+                options: ["5", "8", "6", "3"],
+                correct: "8",
+                tip: "Regarde bien l'étiquette Pomme 🍎, puis cherche le chiffre dessiné juste à côté !"
+            },
+            {
+                difficulty: "facile",
+                title: "Les insectes du jardin",
+                instruction: "Regarde le tableau des insectes observés par Hugo. Combien de Coccinelles a-t-il vues ?",
+                type: "table_simple",
+                visual: {
+                    headers: ["Insecte", "Nombre"],
+                    rows: [
+                        ["🐞 Coccinelle", "9 coccinelles"],
+                        ["🦋 Papillon", "4 papillons"],
+                        ["🐝 Abeille", "6 abeilles"]
+                    ],
+                    accentRow: 0
+                },
+                options: ["4", "9", "6", "12"],
+                correct: "9",
+                tip: "Trouve la ligne de la Coccinelle 🐞 et lis le nombre écrit !"
+            },
+            {
+                difficulty: "facile",
+                title: "Les animaux de la forêt",
+                instruction: "Observe ce tableau des animaux croisés dans les bois. Quel animal a été vu exactement 4 fois ?",
+                type: "table_simple",
+                visual: {
+                    headers: ["Animal", "Nombre vu"],
+                    rows: [
+                        ["🦊 Renard", "4 animaux"],
+                        ["🦌 Cerf", "2 animaux"],
+                        ["🐿️ Écureuil", "9 animaux"]
+                    ],
+                    accentRow: 0
+                },
+                options: ["Le Renard", "Le Cerf", "L'Écureuil"],
+                correct: "Le Renard",
+                tip: "Trouve la ligne où il y a écrit '4 animaux' et regarde son dessin !"
+            },
+            {
+                difficulty: "facile",
+                title: "Le doudou de la classe",
+                instruction: "Voici le tableau des doudous rapportés par les élèves. Combien de Lapins y a-t-il ?",
+                type: "table_simple",
+                visual: {
+                    headers: ["Doudou", "Quantité"],
+                    rows: [
+                        ["🧸 Ours en peluche", "3 doudous"],
+                        ["🐰 Lapin", "7 doudous"],
+                        ["🐱 Chat", "2 doudous"]
+                    ],
+                    accentRow: 1
+                },
+                options: ["3", "7", "2", "5"],
+                correct: "7",
+                tip: "Trouve le Lapin 🐰 dans la liste et lis la quantité !"
+            },
+            {
+                difficulty: "facile",
+                title: "Les bonbons d'Emma",
+                instruction: "Regarde le tableau des bonbons préférés. Combien d'enfants aiment le bonbon Fraise ?",
+                type: "table_simple",
+                visual: {
+                    headers: ["Bonbon", "Votes"],
+                    rows: [
+                        ["🍓 Fraise", "10 enfants"],
+                        ["🍋 Citron", "5 enfants"],
+                        ["🍏 Pomme", "4 enfants"]
+                    ],
+                    accentRow: 0
+                },
+                options: ["10", "5", "4", "15"],
+                correct: "10",
+                tip: "Lis attentivement la ligne de la Fraise 🍓 !"
+            },
+            {
+                difficulty: "facile",
+                title: "Les fleurs du parc",
+                instruction: "Regarde ce tableau des fleurs plantées. Quelle fleur compte 6 plantations ?",
+                type: "table_simple",
+                visual: {
+                    headers: ["Fleur", "Nombre"],
+                    rows: [
+                        ["🌹 Rose", "6 fleurs"],
+                        ["🌻 Tournesol", "3 fleurs"],
+                        ["🌷 Tulipe", "8 fleurs"]
+                    ],
+                    accentRow: 0
+                },
+                options: ["La Rose", "Le Tournesol", "La Tulipe"],
+                correct: "La Rose",
+                tip: "Trouve le chiffre 6, puis regarde le nom de la fleur sur la même ligne !"
+            },
+            {
+                difficulty: "facile",
+                title: "Le placard à jouets",
+                instruction: "Voici le diagramme des jouets rangés dans le placard. Quel jouet est présent 4 fois ?",
+                type: "bar_chart",
+                visual: {
+                    bars: [
+                        { name: "🚗 Voitures", value: 6, color: "bg-teal-400" },
+                        { name: "🧸 Ours", value: 4, color: "bg-amber-400" },
+                        { name: "🪁 Cerf-volant", value: 3, color: "bg-purple-400" },
+                        { name: "⚽ Ballon", value: 8, color: "bg-rose-400" }
+                    ]
+                },
+                options: ["Les Voitures", "Les Ours", "Les Ballons", "Les Cerfs-volants"],
+                correct: "Les Ours",
+                tip: "Regarde la bande qui s'arrête exactement sur le chiffre 4 !"
+            },
+            {
+                difficulty: "facile",
+                title: "Les sports préférés",
+                instruction: "Voici le diagramme des choix sportifs. Quel sport a obtenu le plus petit nombre de choix ?",
+                type: "bar_chart",
+                visual: {
+                    bars: [
+                        { name: "⚽ Football", value: 10, color: "bg-green-400" },
+                        { name: "🏀 Basket", value: 7, color: "bg-orange-400" },
+                        { name: "🏊 Judo", value: 3, color: "bg-indigo-400" },
+                        { name: "🎾 Tennis", value: 5, color: "bg-yellow-300" }
+                    ]
+                },
+                options: ["Le Football", "Le Basket", "Le Judo", "Le Tennis"],
+                correct: "Le Judo",
+                tip: "Cherche la barre colorée la plus petite de toutes !"
+            },
+            {
+                difficulty: "facile",
+                title: "Les animaux de la ferme",
+                instruction: "Observe ce graphique. Combien de Moutons sont dans le pré ?",
+                type: "bar_chart",
+                visual: {
+                    bars: [
+                        { name: "🐄 Vache", value: 4, color: "bg-slate-400" },
+                        { name: "🐖 Cochon", value: 6, color: "bg-pink-300" },
+                        { name: "🐏 Mouton", value: 5, color: "bg-amber-100" }
+                    ]
+                },
+                options: ["4", "6", "5", "3"],
+                correct: "5",
+                tip: "Regarde la hauteur de la barre du Mouton 🐏 et lis sa valeur au-dessus."
+            },
+            {
+                difficulty: "facile",
+                title: "Les instruments de musique",
+                instruction: "Quel est l'instrument le moins choisi par les enfants de l'école ?",
+                type: "bar_chart",
+                visual: {
+                    bars: [
+                        { name: "🎸 Guitare", value: 7, color: "bg-red-400" },
+                        { name: "🎹 Piano", value: 4, color: "bg-sky-400" },
+                        { name: "🎺 Trompette", value: 2, color: "bg-yellow-400" }
+                    ]
+                },
+                options: ["La Guitare", "Le Piano", "La Trompette"],
+                correct: "La Trompette",
+                tip: "Repère la tour la plus basse du dessin !"
+            },
+            {
+                difficulty: "facile",
+                title: "Les fruits d'été",
+                instruction: "Dans ce tableau, combien de Melons ont été récoltés ?",
+                type: "table_simple",
+                visual: {
+                    headers: ["Fruit", "Récolte"],
+                    rows: [
+                        ["🍉 Pastèque", "5 pastèques"],
+                        ["🍈 Melon", "3 melons"],
+                        ["🍑 Pêche", "9 pêches"]
+                    ],
+                    accentRow: 1
+                },
+                options: ["5", "3", "9"],
+                correct: "3",
+                tip: "Regarde la ligne du Melon 🍈 !"
+            },
+            {
+                difficulty: "facile",
+                title: "Les animaux du zoo",
+                instruction: "Combien de Lions ont été comptés par les gardiens du zoo ?",
+                type: "table_simple",
+                visual: {
+                    headers: ["Animal", "Nombre"],
+                    rows: [
+                        ["🦁 Lion", "2 lions"],
+                        ["🦒 Girafe", "5 girafes"],
+                        ["🐘 Éléphant", "3 éléphants"]
+                    ],
+                    accentRow: 0
+                },
+                options: ["2", "5", "3"],
+                correct: "2",
+                tip: "Lis bien la première ligne avec le dessin du Lion 🦁 !"
+            },
+            {
+                difficulty: "facile",
+                title: "Les ballons de couleur",
+                instruction: "Combien de ballons Verts sont gonflés pour la fête ?",
+                type: "table_simple",
+                visual: {
+                    headers: ["Couleur", "Ballons"],
+                    rows: [
+                        ["🔴 Rouge", "10 ballons"],
+                        ["🔵 Bleu", "8 ballons"],
+                        ["🟢 Vert", "6 ballons"]
+                    ],
+                    accentRow: 2
+                },
+                options: ["10", "8", "6", "4"],
+                correct: "6",
+                tip: "Regarde la ligne du ballon Vert 🟢 !"
+            },
+            {
+                difficulty: "facile",
+                title: "Les brosses à dents",
+                instruction: "Quel est l'objet le plus présent dans le gobelet d'après le tableau ?",
+                type: "table_simple",
+                visual: {
+                    headers: ["Objet", "Quantité"],
+                    rows: [
+                        ["🪥 Brosse à dents", "8 objets"],
+                        ["🦷 Dentifrice", "3 objets"]
+                    ],
+                    accentRow: 0
+                },
+                options: ["La Brosse à dents", "Le Dentifrice"],
+                correct: "La Brosse à dents",
+                tip: "Quel objet a le plus grand nombre de la liste ?"
+            },
+
+            // ================== NORMALE (13 QUESTIONS) ==================
+            {
+                difficulty: "normale",
+                title: "Les Animaux de Julie",
+                instruction: "Voici un tableau à double entrée de la ferme. Combien de Poules rousses y a-t-il ?",
+                type: "double_entry_table",
+                visual: {
+                    headers: ["Couleur / Animal", "🐓 Poule", "🐖 Cochon"],
+                    rows: [
+                        ["Blanc / Rose", "4", "3"],
+                        ["Roux / Noir", "7", "2"]
+                    ],
+                    targetCell: { row: 1, col: 1 }
+                },
+                options: ["4", "3", "7", "2"],
+                correct: "7",
+                tip: "Pose ton doigt sur l'image 'Poule' en haut, et descends jusqu'à la ligne 'Roux' !"
+            },
+            {
+                difficulty: "normale",
+                title: "Les vélos de l'école",
+                instruction: "Observe ce diagramme. Combien de vélos et de trottinettes y a-t-il EN TOUT à la récréation ?",
+                type: "bar_chart_calc",
+                visual: {
+                    bars: [
+                        { name: "🚲 Vélo", value: 5, color: "bg-sky-400" },
+                        { name: "🛴 Trottinette", value: 4, color: "bg-pink-400" },
+                        { name: "🚌 Bus", value: 2, color: "bg-yellow-400" }
+                    ]
+                },
+                options: ["5 vélos et trottinettes", "9 vélos et trottinettes", "6 vélos et trottinettes", "7 vélos et trottinettes"],
+                correct: "9 vélos et trottinettes",
+                tip: "Fais une addition : compte les vélos (5) et ajoute les trottinettes (4). 5 + 4 = 9"
+            },
+            {
+                difficulty: "normale",
+                title: "La Météo de Léa",
+                instruction: "Léa a compté les jours de pluie et de soleil. Quel graphique correspond exactement au tableau ?",
+                type: "compare_table_diagram",
+                visual: {
+                    table: {
+                        headers: ["Météo", "Jours"],
+                        rows: [
+                            ["☀️ Soleil", "4 jours"],
+                            ["🌧️ Pluie", "3 jours"]
+                        ]
+                    },
+                    options: [
+                        {
+                            id: "A",
+                            desc: "Dessin A",
+                            bars: [
+                                { name: "☀️", value: 4, color: "bg-amber-400" },
+                                { name: "🌧️", value: 3, color: "bg-sky-400" }
+                            ]
+                        },
+                        {
+                            id: "B",
+                            desc: "Dessin B",
+                            bars: [
+                                { name: "☀️", value: 2, color: "bg-amber-400" },
+                                { name: "🌧️", value: 5, color: "bg-sky-400" }
+                            ]
+                        }
+                    ]
+                },
+                options: ["Le Graphique A", "Le Graphique B"],
+                correct: "Le Graphique A",
+                tip: "Cherche le dessin qui montre bien 4 cases de soleil ☀️ et 3 cases de pluie 🌧️."
+            },
+            {
+                difficulty: "normale",
+                title: "La boulangerie de mamie",
+                instruction: "Voici les viennoiseries vendues ce matin. Combien de croissants au chocolat ont été mangés ?",
+                type: "double_entry_table",
+                visual: {
+                    headers: ["Parfum / Type", "🥐 Croissant", "🍞 Brioche"],
+                    rows: [
+                        ["Nature", "10", "5"],
+                        ["Au Chocolat", "8", "3"]
+                    ],
+                    targetCell: { row: 1, col: 1 }
+                },
+                options: ["10", "5", "8", "3"],
+                correct: "8",
+                tip: "Mets ton doigt sur '🥐 Croissant' et descends sur la ligne 'Au Chocolat' !"
+            },
+            {
+                difficulty: "normale",
+                title: "L'armoire de Tom",
+                instruction: "Voici les vêtements rangés dans l'armoire de Tom. Combien de T-shirts bleus possède-t-il ?",
+                type: "double_entry_table",
+                visual: {
+                    headers: ["Couleur / Habit", "👕 T-shirt", "👖 Pantalon"],
+                    rows: [
+                        ["Bleu", "5", "3"],
+                        ["Vert", "2", "4"]
+                    ],
+                    targetCell: { row: 0, col: 1 }
+                },
+                options: ["5", "3", "2", "4"],
+                correct: "5",
+                tip: "Cherche la colonne du '👕 T-shirt' et la ligne de la couleur 'Bleu' !"
+            },
+            {
+                difficulty: "normale",
+                title: "La boîte de crayons",
+                instruction: "Voici le matériel trouvé dans la trousse. Combien de gommes et de crayons y a-t-il EN TOUT ?",
+                type: "bar_chart_calc",
+                visual: {
+                    bars: [
+                        { name: "✏️ Crayon", value: 6, color: "bg-amber-400" },
+                        { name: "🧽 Gomme", value: 3, color: "bg-pink-300" },
+                        { name: "📏 Règle", value: 2, color: "bg-teal-400" }
+                    ]
+                },
+                options: ["6 crayons et gommes", "8 crayons et gommes", "9 crayons et gommes", "11 crayons et gommes"],
+                correct: "9 crayons et gommes",
+                tip: "Fais une addition : ajoute les 6 crayons et les 3 gommes !"
+            },
+            {
+                difficulty: "normale",
+                title: "Le recyclage de l'école",
+                instruction: "Quel déchet a été le plus collecté dans les poubelles de tri de la classe ?",
+                type: "bar_chart",
+                visual: {
+                    bars: [
+                        { name: "🍾 Verre", value: 3, color: "bg-emerald-300" },
+                        { name: "📄 Papier", value: 9, color: "bg-sky-300" },
+                        { name: "🥤 Plastique", value: 6, color: "bg-red-300" }
+                    ]
+                },
+                options: ["Le Verre", "Le Papier", "Le Plastique"],
+                correct: "Le Papier",
+                tip: "Trouve la tour de couleur la plus haute de toutes !"
+            },
+            {
+                difficulty: "normale",
+                title: "Le goûter des CP",
+                instruction: "Voici le tableau des boissons servies. Combien d'enfants ont bu du jus de pomme ?",
+                type: "double_entry_table",
+                visual: {
+                    headers: ["Boisson / Fruit", "🍏 Pomme", "🍊 Orange"],
+                    rows: [
+                        ["🥤 Jus", "6", "4"],
+                        ["🥛 Sirop", "2", "5"]
+                    ],
+                    targetCell: { row: 0, col: 1 }
+                },
+                options: ["6", "4", "2", "5"],
+                correct: "6",
+                tip: "Regarde l'intersection de la ligne 'Jus' et de la colonne 'Pomme'."
+            },
+            {
+                difficulty: "normale",
+                title: "Les coquillages de la plage",
+                instruction: "Combien de coquillages roses et jaunes Lucas a-t-il ramassés en tout ?",
+                type: "bar_chart_calc",
+                visual: {
+                    bars: [
+                        { name: "💗 Rose", value: 5, color: "bg-rose-300" },
+                        { name: "💛 Jaune", value: 3, color: "bg-yellow-200" },
+                        { name: "🤍 Blanc", value: 6, color: "bg-slate-100" }
+                    ]
+                },
+                options: ["5 coquillages", "8 coquillages", "9 coquillages", "11 coquillages"],
+                correct: "8 coquillages",
+                tip: "Additionne le nombre de coquillages roses (5) et jaunes (3)."
+            },
+            {
+                difficulty: "normale",
+                title: "Les livres de la bibliothèque",
+                instruction: "Regarde le tableau des lectures de la semaine. Quel genre de livre a été lu 12 fois ?",
+                type: "table_simple",
+                visual: {
+                    headers: ["Genre", "Livres lus"],
+                    rows: [
+                        ["📚 Conte", "8 contes"],
+                        ["🎨 BD", "12 BD"],
+                        ["🐱 Roman", "5 romans"]
+                    ],
+                    accentRow: 1
+                },
+                options: ["Le Conte", "La BD", "Le Roman"],
+                correct: "La BD",
+                tip: "Trouve la ligne qui affiche le nombre 12 !"
+            },
+            {
+                difficulty: "normale",
+                title: "Les étoiles filantes",
+                instruction: "Le tableau indique l'observation de Zoé. Quel dessin montre les bonnes données ?",
+                type: "compare_table_diagram",
+                visual: {
+                    table: {
+                        headers: ["Nuit", "Étoiles vues"],
+                        rows: [
+                            ["Lundi", "3 étoiles"],
+                            ["Mardi", "5 étoiles"]
+                        ]
+                    },
+                    options: [
+                        {
+                            id: "A",
+                            desc: "Dessin A",
+                            bars: [
+                                { name: "Lun", value: 1, color: "bg-indigo-300" },
+                                { name: "Mar", value: 6, color: "bg-violet-400" }
+                            ]
+                        },
+                        {
+                            id: "B",
+                            desc: "Dessin B",
+                            bars: [
+                                { name: "Lun", value: 3, color: "bg-indigo-300" },
+                                { name: "Mar", value: 5, color: "bg-violet-400" }
+                            ]
+                        }
+                    ]
+                },
+                options: ["Le Graphique A", "Le Graphique B"],
+                correct: "Le Graphique B",
+                tip: "Cherche le dessin qui comporte 3 pour Lundi et 5 pour Mardi !"
+            },
+            {
+                difficulty: "normale",
+                title: "La trousse de géométrie",
+                instruction: "Combien de règles rouges sont rangées dans le tiroir de l'école ?",
+                type: "double_entry_table",
+                visual: {
+                    headers: ["Couleur / Outil", "📏 Règle", "✂️ Ciseau"],
+                    rows: [
+                        ["Bleu", "3", "5"],
+                        ["Rouge", "4", "2"]
+                    ],
+                    targetCell: { row: 1, col: 1 }
+                },
+                options: ["3", "5", "4", "2"],
+                correct: "4",
+                tip: "Suis la ligne 'Rouge' jusqu'à la colonne du dessin de la Règle 📏 !"
+            },
+            {
+                difficulty: "normale",
+                title: "Les légumes du potager",
+                instruction: "Regarde le tableau de récolte de papi. Combien de carottes ont été récoltées ?",
+                type: "table_simple",
+                visual: {
+                    headers: ["Légume", "Nombre"],
+                    rows: [
+                        ["🥕 Carotte", "10 carottes"],
+                        ["🍅 Tomate", "15 tomates"],
+                        ["🥬 Salade", "4 salades"]
+                    ],
+                    accentRow: 0
+                },
+                options: ["10", "15", "4", "20"],
+                correct: "10",
+                tip: "Lis attentivement la ligne de la Carotte 🥕."
+            },
+
+            // ================== DIFFICILE (13 QUESTIONS) ==================
+            {
+                difficulty: "difficile",
+                title: "Le tournoi de billes",
+                instruction: "Combien de billes Vertes possède Max d'après ce tableau de la récréation ?",
+                type: "double_entry_table",
+                visual: {
+                    headers: ["Élève / Couleur", "🟢 Vert", "🔵 Bleu", "🔴 Rouge"],
+                    rows: [
+                        ["Léa", "8", "15", "6"],
+                        ["Max", "12", "9", "11"]
+                    ],
+                    targetCell: { row: 1, col: 1 }
+                },
+                options: ["8", "12", "9", "11"],
+                correct: "12",
+                tip: "Regarde la ligne de 'Max' et déplace ton doigt vers la colonne 'Vert 🟢'."
+            },
+            {
+                difficulty: "difficile",
+                title: "La ferme pédagogique",
+                instruction: "Dans la basse-cour, combien de canards (blancs et noirs) y a-t-il EN TOUT ?",
+                type: "double_entry_table",
+                visual: {
+                    headers: ["Couleur / Animal", "🦆 Canard", "🐔 Poule"],
+                    rows: [
+                        ["Blanc", "4", "10"],
+                        ["Noir", "5", "8"]
+                    ],
+                    targetCell: { row: 0, col: 1 } // Non pointé directement car calcul
+                },
+                options: ["4", "9", "14", "27"],
+                correct: "9",
+                tip: "Fais l'addition : prends les canards blancs (4) et ajoute les canards noirs (5) ! 4 + 5 = 9."
+            },
+            {
+                difficulty: "difficile",
+                title: "La course d'athlétisme",
+                instruction: "Combien de voitures de plus que d'ours Tom possède-t-il dans son placard ?",
+                type: "bar_chart_calc",
+                visual: {
+                    bars: [
+                        { name: "🚗 Voitures", value: 6, color: "bg-teal-400" },
+                        { name: "🧸 Ours", value: 4, color: "bg-amber-400" },
+                        { name: "🪁 Cerfs-volants", value: 3, color: "bg-purple-400" }
+                    ]
+                },
+                options: ["2 voitures de plus", "6 voitures de plus", "4 voitures de plus", "3 voitures de plus"],
+                correct: "2 voitures de plus",
+                tip: "Fais une soustraction : soustrais le nombre d'ours (4) au nombre de voitures (6) ! 6 - 4 = 2."
+            },
+            {
+                difficulty: "difficile",
+                title: "Les fruits du marché",
+                instruction: "Voici les stocks de pommes du marchand. Combien de pommes vertes possède-t-il en tout ?",
+                type: "double_entry_table",
+                visual: {
+                    headers: ["Variété / Couleur", "🍏 Verte", "🍎 Rouge"],
+                    rows: [
+                        ["Gala / Granny", "10", "12"],
+                        ["Golden / Fuji", "5", "8"]
+                    ],
+                    targetCell: { row: 0, col: 1 }
+                },
+                options: ["10", "15", "22", "35"],
+                correct: "15",
+                tip: "Il faut ajouter toutes les pommes vertes : celles de la première ligne (10) et de la deuxième (5). 10 + 5 = 15."
+            },
+            {
+                difficulty: "difficile",
+                title: "La cantine de l'école",
+                instruction: "Combien d'élèves de plus préfèrent les frites plutôt que les pâtes ?",
+                type: "bar_chart_calc",
+                visual: {
+                    bars: [
+                        { name: "🍟 Frites", value: 10, color: "bg-yellow-400" },
+                        { name: "🍝 Pâtes", value: 7, color: "bg-orange-400" },
+                        { name: "🥦 Brocolis", value: 2, color: "bg-green-400" }
+                    ]
+                },
+                options: ["10 élèves", "7 élèves", "3 élèves", "2 élèves"],
+                correct: "3 élèves",
+                tip: "Calcule la différence entre les frites (10) et les pâtes (7). 10 - 7 = 3."
+            },
+            {
+                difficulty: "difficile",
+                title: "Le magasin de sport",
+                instruction: "Combien de chaussures de football de couleur blanche sont en rayon ?",
+                type: "double_entry_table",
+                visual: {
+                    headers: ["Type / Couleur", "👟 Basket", "🥾 Chaussure de Foot"],
+                    rows: [
+                        ["Blanc", "12", "8"],
+                        ["Noir", "14", "6"]
+                    ],
+                    targetCell: { row: 0, col: 2 }
+                },
+                options: ["12", "8", "14", "6"],
+                correct: "8",
+                tip: "Cherche la ligne 'Blanc' et glisse ton doigt vers la colonne 'Chaussure de Foot'."
+            },
+            {
+                difficulty: "difficile",
+                title: "La fête foraine",
+                instruction: "Le tableau montre les billets vendus. Quel graphique montre les bonnes données ?",
+                type: "compare_table_diagram",
+                visual: {
+                    table: {
+                        headers: ["Manège", "Tickets"],
+                        rows: [
+                            ["🎠 Carrousel", "5 tickets"],
+                            ["🎢 Grand Huit", "1 ticket"]
+                        ]
+                    },
+                    options: [
+                        {
+                            id: "A",
+                            desc: "Dessin A",
+                            bars: [
+                                { name: "🎠", value: 5, color: "bg-pink-300" },
+                                { name: "🎢", value: 1, color: "bg-rose-400" }
+                            ]
+                        },
+                        {
+                            id: "B",
+                            desc: "Dessin B",
+                            bars: [
+                                { name: "🎠", value: 3, color: "bg-pink-300" },
+                                { name: "🎢", value: 3, color: "bg-rose-400" }
+                            ]
+                        }
+                    ]
+                },
+                options: ["Le Graphique A", "Le Graphique B"],
+                correct: "Le Graphique A",
+                tip: "Trouve le graphique avec une grande barre de 5 pour le Carrousel 🎠 et une petite de 1 pour le Grand Huit 🎢."
+            },
+            {
+                difficulty: "difficile",
+                title: "Les arbres de la forêt",
+                instruction: "Combien d'arbres (Sapins, Chênes et Pins) le garde forestier a-t-il comptés en tout ?",
+                type: "bar_chart_calc",
+                visual: {
+                    bars: [
+                        { name: "🌲 Sapin", value: 4, color: "bg-emerald-600" },
+                        { name: "🌳 Chêne", value: 6, color: "bg-green-500" },
+                        { name: "🌴 Pin", value: 2, color: "bg-yellow-500" }
+                    ]
+                },
+                options: ["10 arbres", "12 arbres", "8 arbres", "6 arbres"],
+                correct: "12 arbres",
+                tip: "Fais une grande addition ! 4 sapins + 6 chênes + 2 pins. 4 + 6 + 2 = 12."
+            },
+            {
+                difficulty: "difficile",
+                title: "Les poissons de l'aquarium",
+                instruction: "Combien de poissons rouges mâles nagent dans l'aquarium ?",
+                type: "double_entry_table",
+                visual: {
+                    headers: ["Genre / Espèce", "🐠 Poisson Rouge", "🐟 Poisson Bleu"],
+                    rows: [
+                        ["Mâle", "9", "4"],
+                        ["Femelle", "6", "8"]
+                    ],
+                    targetCell: { row: 0, col: 1 }
+                },
+                options: ["9", "4", "6", "8"],
+                correct: "9",
+                tip: "Trouve la ligne 'Mâle' et la colonne 'Poisson Rouge 🐠'."
+            },
+            {
+                difficulty: "difficile",
+                title: "La collection de cartes",
+                instruction: "Combien de cartes de dinosaures de moins que de super-héros Julie possède-t-elle ?",
+                type: "bar_chart_calc",
+                visual: {
+                    bars: [
+                        { name: "🦸 Super-héros", value: 12, color: "bg-purple-500" },
+                        { name: "🦖 Dinosaures", value: 7, color: "bg-green-600" }
+                    ]
+                },
+                options: ["5 cartes de moins", "12 cartes de moins", "7 cartes de moins", "19 cartes de moins"],
+                correct: "5 cartes de moins",
+                tip: "Soustrait les cartes de dinosaures (7) aux cartes de super-héros (12). 12 - 7 = 5."
+            },
+            {
+                difficulty: "difficile",
+                title: "Les animaux marins",
+                instruction: "Dans ce récif, combien de tortues vertes ont été observées par les plongeurs ?",
+                type: "double_entry_table",
+                visual: {
+                    headers: ["Couleur / Animal", "🐢 Tortue", "🐠 Poisson-clown"],
+                    rows: [
+                        ["Orange / Brun", "3", "12"],
+                        ["Vert", "6", "0"]
+                    ],
+                    targetCell: { row: 1, col: 1 }
+                },
+                options: ["3", "12", "6", "0"],
+                correct: "6",
+                tip: "Regarde l'intersection de la ligne 'Vert' et de la colonne 'Tortue 🐢'."
+            },
+            {
+                difficulty: "difficile",
+                title: "Les fleurs de la fleuriste",
+                instruction: "La marchande prépare un bouquet avec des Tulipes et des Roses. Combien de fleurs compte le bouquet ?",
+                type: "bar_chart_calc",
+                visual: {
+                    bars: [
+                        { name: "🌷 Tulipe", value: 8, color: "bg-pink-400" },
+                        { name: "🌹 Rose", value: 5, color: "bg-red-500" },
+                        { name: "🌼 Marguerite", value: 6, color: "bg-yellow-400" }
+                    ]
+                },
+                options: ["13 fleurs", "14 fleurs", "19 fleurs", "8 fleurs"],
+                correct: "13 fleurs",
+                tip: "Additionne uniquement les tulipes (8) et les roses (5). 8 + 5 = 13."
+            },
+            {
+                difficulty: "difficile",
+                title: "Le camp de vacances",
+                instruction: "Combien de garçons font de l'activité voile au club nautique ?",
+                type: "double_entry_table",
+                visual: {
+                    headers: ["Genre / Sport", "⛵ Voile", "🛶 Kayak"],
+                    rows: [
+                        ["Filles", "10", "12"],
+                        ["Garçons", "14", "9"]
+                    ],
+                    targetCell: { row: 1, col: 1 }
+                },
+                options: ["10", "12", "14", "9"],
+                correct: "14",
+                tip: "Repère la ligne 'Garçons' puis déplace ton doigt vers la colonne 'Voile ⛵'."
+            }
+        ];
+
+        // --- ÉTAT DU JEU ---
+        let selectedDifficulty = "facile"; // Valeur par défaut
+        let activeQuestions = []; 
+        let currentLevelIndex = 0;
+        let selectedOption = null;
+        let isValidated = false;
+        let stars = []; 
+        let studentName = "";
+
+        // Sauvegarde l'état d'activité courant de l'élève
+        function saveCurrentSession() {
+            if (!studentName) return;
+            const sessionData = {
+                studentName: studentName,
+                selectedDifficulty: selectedDifficulty,
+                currentLevelIndex: currentLevelIndex,
+                stars: stars,
+                activeQuestions: activeQuestions,
+                timestamp: new Date().toISOString()
+            };
+            localStorage.setItem('detective_active_session', JSON.stringify(sessionData));
+        }
+
+        // Supprime la session active si terminée ou annulée
+        function clearSavedSession() {
+            localStorage.removeItem('detective_active_session');
+        }
+
+        // Analyse s'il existe une partie en cours de moins de 48 heures au lancement
+        function checkActiveSession() {
+            const saved = localStorage.getItem('detective_active_session');
+            if (saved) {
+                try {
+                    const session = JSON.parse(saved);
+                    const now = new Date().getTime();
+                    const sessionTime = new Date(session.timestamp).getTime();
+                    const fortyEightHoursInMs = 48 * 60 * 60 * 1000;
+
+                    // Si la session a moins de 48 heures et contient un prénom valide
+                    if ((now - sessionTime) < fortyEightHoursInMs && session.studentName) {
+                        const modalText = document.getElementById('resume-modal-text');
+                        modalText.innerText = `Bonjour ${session.studentName} ! Tu as commencé une enquête de niveau ${session.selectedDifficulty} il y a moins de 48h. Veux-tu la terminer ?`;
+                        document.getElementById('resume-modal').classList.remove('hidden');
+                        setTimeout(() => lucide.createIcons(), 50);
+                        return true;
+                    } else {
+                        clearSavedSession(); // Session expirée
+                    }
+                } catch (e) {
+                    console.error("Erreur d'analyse de la sauvegarde de session", e);
+                }
+            }
+            return false;
+        }
+
+        // Action : Reprendre la partie chargée
+        function resumeSavedSession() {
+            const saved = localStorage.getItem('detective_active_session');
+            if (saved) {
+                const session = JSON.parse(saved);
+                studentName = session.studentName;
+                selectedDifficulty = session.selectedDifficulty;
+                currentLevelIndex = session.currentLevelIndex;
+                stars = session.stars;
+                activeQuestions = session.activeQuestions;
+
+                document.getElementById('student-name').value = studentName;
+                selectDifficulty(selectedDifficulty);
+
+                document.getElementById('welcome-screen').classList.add('hidden');
+                document.getElementById('resume-modal').classList.add('hidden');
+                document.getElementById('game-screen').classList.remove('hidden');
+                document.getElementById('current-player-tag').innerText = `Détective : ${studentName}`;
+
+                updateDifficultyBadge();
+                loadLevel();
+            }
+        }
+
+        // Action : Recommencer à zéro (effacer l'ancienne session)
+        function discardSavedSession() {
+            clearSavedSession();
+            document.getElementById('resume-modal').classList.add('hidden');
+        }
+
+        // Met à jour l'apparence visuelle du badge de niveau
+        function updateDifficultyBadge() {
+            const diffBadge = document.getElementById('difficulty-badge');
+            if (selectedDifficulty === 'facile') {
+                diffBadge.className = "text-xs bg-emerald-100 border-emerald-400 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold";
+                diffBadge.innerText = "Facile (CP)";
+            } else if (selectedDifficulty === 'normale') {
+                diffBadge.className = "text-xs bg-amber-100 border-amber-400 text-amber-800 px-2.5 py-0.5 rounded-full font-bold";
+                diffBadge.innerText = "Normale (CE1)";
+            } else {
+                diffBadge.className = "text-xs bg-red-100 border-red-400 text-red-800 px-2.5 py-0.5 rounded-full font-bold";
+                diffBadge.innerText = "Difficile (CE2)";
+            }
+        }
+
+        // Mélange aléatoire (Fisher-Yates)
+        function shuffleArray(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [
+                    array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        // Gestion de la sélection de difficulté visuelle à l'accueil
+        function selectDifficulty(diff) {
+            selectedDifficulty = diff;
+            
+            // Réinitialiser les styles des boutons
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                btn.className = btn.className.replace(/ring-4 ring-amber-500 border-amber-500 bg-amber-50\/50/g, 'border-slate-300 bg-white');
+            });
+
+            // Mettre en évidence le bouton cliqué
+            const activeBtn = document.getElementById(`btn-${diff}`);
+            if (activeBtn) {
+                activeBtn.className = activeBtn.className.replace(/border-slate-300 bg-white/g, 'ring-4 ring-amber-500 border-amber-500 bg-amber-50/50');
+            }
+        }
+
+        // --- CYCLE DE VIE DU JEU ---
+        function tryStartGame() {
+            const nameInput = document.getElementById('student-name');
+            const trimmedName = nameInput.value.trim();
+
+            if (trimmedName === "") {
+                document.getElementById('name-warning').classList.remove('hidden');
+                nameInput.focus();
+                return;
+            }
+
+            document.getElementById('name-warning').classList.add('hidden');
+            studentName = trimmedName;
+
+            // Filtrer la banque de données de 40 questions selon le niveau choisi
+            const filteredQuestions = questionPool.filter(q => q.difficulty === selectedDifficulty);
+            
+            if (filteredQuestions.length < 5) {
+                console.error("Pas assez de questions dans cette catégorie.");
+                return;
+            }
+
+            // Mélanger et sélectionner exactement 5 questions uniques
+            const shuffledPool = shuffleArray([...filteredQuestions]);
+            activeQuestions = shuffledPool.slice(0, 5);
+
+            // Masquer l'accueil, afficher l'écran principal de jeu
+            document.getElementById('welcome-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            document.getElementById('current-player-tag').innerText = `Détective : ${studentName}`;
+
+            // Configurer le badge de difficulté
+            updateDifficultyBadge();
+
+            currentLevelIndex = 0;
+            stars = new Array(activeQuestions.length).fill(null);
+            
+            // On sauvegarde l'état initial de la session
+            saveCurrentSession();
+            
+            loadLevel();
+        }
+
+        // Chargement du niveau actuel
+        function loadLevel() {
+            const level = activeQuestions[currentLevelIndex];
+            selectedOption = null;
+            isValidated = false;
+
+            document.getElementById('feedback-bar').classList.add('hidden');
+
+            document.getElementById('level-title').innerText = `Enquête ${currentLevelIndex + 1} / ${activeQuestions.length}`;
+            document.getElementById('instruction-text').innerText = level.instruction;
+
+            const progressPercent = ((currentLevelIndex) / activeQuestions.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+
+            renderStars();
+            renderVisual(level);
+            renderOptions(level);
+
+            // Enregistrement de l'état d'avancement
+            saveCurrentSession();
+
+            setTimeout(() => lucide.createIcons(), 50);
+        }
+
+        // Dessine les visuels sur la feuille de classeur à grands carreaux
+        function renderVisual(level) {
+            const container = document.getElementById('visual-container');
+            container.innerHTML = ""; 
+
+            if (level.type === 'table_simple') {
+                let tableHtml = `
+                    <div class="w-full max-w-sm pop-in">
+                        <table class="w-full bg-[#fffefc] rounded-2xl overflow-hidden border-4 border-slate-700 shadow-md transform rotate-[-1deg]">
+                            <thead>
+                                <tr class="bg-amber-100 border-b-4 border-slate-700">
+                                    <th class="px-5 py-3 text-left font-handwritten font-extrabold text-slate-700 text-sm sm:text-base">${level.visual.headers[0]}</th>
+                                    <th class="px-5 py-3 text-center font-handwritten font-extrabold text-slate-700 text-sm sm:text-base">${level.visual.headers[1]}</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y-2 divide-slate-200">
+                `;
+
+                level.visual.rows.forEach((row, idx) => {
+                    const isAccent = level.visual.accentRow === idx;
+                    const rowClass = isAccent ? 'bg-sky-100/70 font-bold text-sky-950' : 'hover:bg-slate-50/50';
+                    tableHtml += `
+                        <tr class="${rowClass} transition-colors">
+                            <td class="px-5 py-4 text-sm sm:text-base font-handwritten">${row[0]}</td>
+                            <td class="px-5 py-4 text-center font-handwritten text-sm sm:text-base font-extrabold">${row[1]}</td>
+                        </tr>
+                    `;
+                });
+
+                tableHtml += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                container.innerHTML = tableHtml;
+
+            } else if (level.type === 'bar_chart' || level.type === 'bar_chart_calc') {
+                let chartHtml = `
+                    <div class="w-full max-w-md px-2 pop-in">
+                        <div class="h-64 sm:h-72 flex items-end justify-around gap-4 relative pb-8 border-b-4 border-slate-700">
+                            <div class="absolute inset-x-0 bottom-0 border-b-2 border-dashed border-sky-200 h-1/4 pointer-events-none"></div>
+                            <div class="absolute inset-x-0 bottom-0 border-b-2 border-dashed border-sky-200 h-2/4 pointer-events-none"></div>
+                            <div class="absolute inset-x-0 bottom-0 border-b-2 border-dashed border-sky-200 h-3/4 pointer-events-none"></div>
+                `;
+
+                const maxVal = Math.max(...level.visual.bars.map(b => b.value)) + 1;
+
+                level.visual.bars.forEach(bar => {
+                    const percentageHeight = (bar.value / maxVal) * 100;
+                    chartHtml += `
+                        <div class="flex flex-col items-center flex-1 h-full justify-end relative group z-10">
+                            <span class="text-sm font-extrabold text-slate-800 mb-1 font-handwritten transition-all group-hover:scale-110">${bar.value}</span>
+                            <div class="w-full ${bar.color} rounded-t-lg transition-all duration-500 border-3 border-slate-700 shadow-[2px_2px_0px_#475569] group-hover:brightness-95" style="height: ${percentageHeight}%"></div>
+                            <span class="absolute top-full mt-2 text-xs font-handwritten font-extrabold text-slate-700 text-center w-full leading-tight truncate">${bar.name}</span>
+                        </div>
+                    `;
+                });
+
+                chartHtml += `
+                        </div>
+                    </div>
+                `;
+                container.innerHTML = chartHtml;
+
+            } else if (level.type === 'double_entry_table') {
+                let tableHtml = `
+                    <div class="w-full max-w-xs sm:max-w-sm pop-in">
+                        <table class="w-full border-collapse bg-white rounded-2xl overflow-hidden border-4 border-slate-700 shadow-md">
+                            <thead>
+                                <tr class="bg-amber-100 border-b-4 border-slate-700">
+                `;
+
+                level.visual.headers.forEach(header => {
+                    tableHtml += `
+                        <th class="px-3 py-3 text-center text-xs sm:text-sm font-handwritten font-extrabold text-slate-700">${header}</th>
+                    `;
+                });
+
+                tableHtml += `
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y-2 divide-slate-200">
+                `;
+
+                level.visual.rows.forEach((row, rIdx) => {
+                    tableHtml += `<tr class="hover:bg-slate-50 transition-colors">`;
+                    row.forEach((cell, cIdx) => {
+                        const isHeaderCol = cIdx === 0;
+                        const isTarget = level.visual.targetCell.row === rIdx && level.visual.targetCell.col === cIdx;
+                        
+                        let cellClass = "";
+                        if (isHeaderCol) {
+                            cellClass = "bg-amber-50/70 font-extrabold text-slate-700 text-left text-xs sm:text-sm px-3 py-3 border-r-2 border-slate-300";
+                        } else if (isTarget) {
+                            cellClass = "px-3 py-3 text-center text-sm sm:text-base font-extrabold text-sky-800 bg-sky-100 border-2 border-sky-400";
+                        } else {
+                            cellClass = "px-3 py-3 text-center text-sm sm:text-base text-slate-800 font-bold font-handwritten";
+                        }
+
+                        tableHtml += `<td class="${cellClass}">${cell}</td>`;
+                    });
+                    tableHtml += `</tr>`;
+                });
+
+                tableHtml += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                container.innerHTML = tableHtml;
+
+            } else if (level.type === 'compare_table_diagram') {
+                let html = `
+                    <div class="w-full flex flex-col gap-6 items-center pop-in">
+                        <div class="w-full max-w-xs bg-white rounded-xl border-3 border-slate-700 shadow-sm overflow-hidden">
+                            <table class="w-full text-center">
+                                <thead class="bg-amber-100 border-b-2 border-slate-700">
+                                    <tr>
+                                        <th class="py-1.5 text-xs font-handwritten font-extrabold text-slate-700">${level.visual.table.headers[0]}</th>
+                                        <th class="py-1.5 text-xs font-handwritten font-extrabold text-slate-700">${level.visual.table.headers[1]}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="border-b border-slate-100">
+                                        <td class="py-1.5 text-xs sm:text-sm text-slate-700 font-bold font-handwritten">${level.visual.table.rows[0][0]}</td>
+                                        <td class="py-1.5 text-xs sm:text-sm font-extrabold text-slate-900">${level.visual.table.rows[0][1]}</td>
+                                    </tr>
+                                    <tr class="border-b border-slate-100">
+                                        <td class="py-1.5 text-xs sm:text-sm text-slate-700 font-bold font-handwritten">${level.visual.table.rows[1][0]}</td>
+                                        <td class="py-1.5 text-xs sm:text-sm font-extrabold text-slate-900">${level.visual.table.rows[1][1]}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 w-full">
+                `;
+
+                level.visual.options.forEach(opt => {
+                    html += `
+                        <div class="bg-white p-3 rounded-2xl border-3 border-slate-700 flex flex-col items-center shadow-sm">
+                            <span class="text-xs bg-amber-100 border border-amber-300 text-amber-800 font-bold px-2 py-0.5 rounded-full mb-2">${opt.desc}</span>
+                            <div class="h-24 flex items-end justify-center gap-3 w-full border-b-2 border-slate-500 pb-2 mb-1">
+                    `;
+
+                    opt.bars.forEach(bar => {
+                        const heightPct = (bar.value / 6) * 100;
+                        html += `
+                            <div class="flex flex-col items-center flex-1 h-full justify-end relative">
+                                <span class="text-[10px] font-bold text-slate-600 font-handwritten mb-0.5">${bar.value}</span>
+                                <div class="w-6 ${bar.color} rounded-t-md border-2 border-slate-700" style="height: ${heightPct}%"></div>
+                                <span class="text-[10px] mt-1">${bar.name}</span>
+                            </div>
+                        `;
+                    });
+
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+                container.innerHTML = html;
+            }
+        }
+
+        // Rendu des options de réponses QCM (Stickers colorés)
+        function renderOptions(level) {
+            const container = document.getElementById('options-container');
+            container.innerHTML = "";
+
+            const stickerColors = [
+                "bg-sky-100 border-sky-400 text-sky-950 hover:bg-sky-200",
+                "bg-amber-100 border-amber-400 text-amber-950 hover:bg-amber-200",
+                "bg-emerald-100 border-emerald-400 text-emerald-950 hover:bg-emerald-200",
+                "bg-purple-100 border-purple-400 text-purple-950 hover:bg-purple-200"
+            ];
+
+            level.options.forEach((option, idx) => {
+                const isSelected = selectedOption === option;
+                const stickerStyle = stickerColors[idx % stickerColors.length];
+                
+                let btnStyle = `bg-white border-slate-200 text-slate-800 hover:bg-slate-50`;
+                if (isSelected) {
+                    btnStyle = "bg-yellow-200 border-amber-500 text-amber-950 shadow-md ring-3 ring-yellow-400/30 rotate-[0.5deg]";
+                } else {
+                    btnStyle = `${stickerStyle} rotate-[${(idx % 2 === 0 ? -0.5 : 0.5)}deg]`;
+                }
+
+                const btn = document.createElement('button');
+                btn.className = `w-full text-left p-4 rounded-2xl border-3 font-extrabold text-base sm:text-lg transition-fun flex items-center justify-between ${btnStyle} group`;
+                btn.onclick = () => selectOption(option);
+                btn.disabled = isValidated;
+
+                btn.innerHTML = `
+                    <span class="font-handwritten">${option}</span>
+                    <div class="w-7 h-7 rounded-full border-2 border-slate-700 flex items-center justify-center transition-all group-hover:scale-110 shrink-0 ${isSelected ? 'bg-amber-400 text-amber-950' : 'bg-white'}">
+                        ${isSelected ? '✏️' : ''}
+                    </div>
+                `;
+
+                container.appendChild(btn);
+            });
+        }
+
+        function selectOption(option) {
+            if (isValidated) return;
+            selectedOption = option;
+            const level = activeQuestions[currentLevelIndex];
+            renderOptions(level);
+            validateAnswer();
+        }
+
+        // Rendu des gommettes étoiles dans le tableau d'en-tête
+        function renderStars() {
+            const container = document.getElementById('stars-container');
+            container.innerHTML = "";
+
+            stars.forEach((starState, index) => {
+                let badge = "⭐"; 
+                let opacity = "opacity-20 scale-90";
+
+                if (starState === true) {
+                    opacity = "opacity-100 animate-pulse scale-110";
+                } else if (starState === false) {
+                    badge = "💫"; 
+                    opacity = "opacity-100 scale-100";
+                }
+
+                container.innerHTML += `
+                    <span class="text-2xl transition-all duration-300 ${opacity}" title="Gommette ${index + 1}">
+                        ${badge}
+                    </span>
+                `;
+            });
+        }
+
+        // Évaluation de la réponse choisie
+        function validateAnswer() {
+            if (isValidated) return;
+            isValidated = true;
+
+            const level = activeQuestions[currentLevelIndex];
+            const isCorrect = selectedOption === level.correct;
+
+            if (stars[currentLevelIndex] === null) {
+                stars[currentLevelIndex] = isCorrect;
+            }
+
+            const feedbackBar = document.getElementById('feedback-bar');
+            const iconContainer = document.getElementById('feedback-icon-container');
+            const fTitle = document.getElementById('feedback-title');
+            const fMessage = document.getElementById('feedback-message');
+            const nextBtn = document.getElementById('next-button');
+
+            feedbackBar.classList.remove('hidden');
+
+            if (isCorrect) {
+                SoundEffects.playSuccess();
+                iconContainer.className = "w-14 h-14 rounded-full flex items-center justify-center text-3xl bg-emerald-100 border-4 border-emerald-500 shrink-0 mx-auto sm:mx-0 animate-bounce";
+                iconContainer.innerHTML = `💯`;
+                fTitle.innerText = "Super champion !";
+                fTitle.className = "text-2xl font-extrabold text-emerald-600";
+                fMessage.innerText = "C'est la bonne réponse ! Tu as gagné ton bon point d'or.";
+                
+                nextBtn.className = "w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 px-8 rounded-2xl text-lg shadow-md border-b-4 transition-fun flex items-center justify-center gap-2 text-lg";
+                if (currentLevelIndex === activeQuestions.length - 1) {
+                    nextBtn.querySelector('span').innerText = "Ouvrir ma récompense";
+                } else {
+                    nextBtn.querySelector('span').innerText = "Suivant !";
+                }
+            } else {
+                SoundEffects.playError();
+                iconContainer.className = "w-14 h-14 rounded-full flex items-center justify-center text-3xl bg-amber-100 border-4 border-amber-500 shrink-0 mx-auto sm:mx-0";
+                iconContainer.innerHTML = `🧐`;
+                fTitle.innerText = "Regarde encore...";
+                fTitle.className = "text-2xl font-extrabold text-amber-600";
+                fMessage.innerText = level.tip; 
+                
+                nextBtn.className = "w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white font-bold py-4 px-8 rounded-2xl text-lg shadow-md border-b-4 transition-fun flex items-center justify-center gap-2 text-lg";
+                nextBtn.querySelector('span').innerText = "Essayer encore";
+                
+                stars[currentLevelIndex] = false;
+            }
+
+            renderStars();
+            saveCurrentSession(); // Mise à jour de la session sauvegardée après tentative
+
+            nextBtn.onclick = () => {
+                if (isCorrect) {
+                    if (currentLevelIndex < activeQuestions.length - 1) {
+                        currentLevelIndex++;
+                        loadLevel();
+                    } else {
+                        showEndScreen();
+                    }
+                } else {
+                    isValidated = false;
+                    selectedOption = null;
+                    feedbackBar.classList.add('hidden');
+                    renderOptions(level);
+                    setTimeout(() => lucide.createIcons(), 50);
+                }
+            };
+
+            setTimeout(() => lucide.createIcons(), 50);
+        }
+
+        // Fin de l'aventure et affichage des récompenses
+        function showEndScreen() {
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('end-screen').classList.remove('hidden');
+
+            document.getElementById('victory-phrase').innerText = `Bravo ${studentName} ! Toutes tes enquêtes de niveau ${selectedDifficulty} ont été résolues avec succès.`;
+
+            const endStarsContainer = document.getElementById('end-stars');
+            endStarsContainer.innerHTML = "";
+            let correctCount = 0;
+            stars.forEach((state) => {
+                const badge = state ? "⭐" : "💫";
+                if (state) correctCount++;
+                endStarsContainer.innerHTML += `<span class="text-4xl animate-bounce" style="animation-delay: ${Math.random() * 0.5}s">${badge}</span>`;
+            });
+
+            // Sauvegarde automatique du score de l'élève
+            if (window.saveScoreToFirebase) {
+                window.saveScoreToFirebase(studentName, selectedDifficulty, correctCount);
+            }
+
+            // La partie est validée, on nettoie la session active pour éviter de re-demander à la reprise
+            clearSavedSession();
+
+            generateConfetti();
+            setTimeout(() => lucide.createIcons(), 50);
+        }
+
+        // Pluie de gommettes en fête
+        function generateConfetti() {
+            const wrapper = document.getElementById('confetti-wrapper');
+            wrapper.innerHTML = "";
+            const colors = ['#f43f5e', '#60a5fa', '#34d399', '#fbbf24', '#c084fc'];
+
+            for (let i = 0; i < 50; i++) {
+                const conf = document.createElement('div');
+                conf.className = "papillote border border-black/10 shadow-sm";
+                conf.style.left = `${Math.random() * 100}vw`;
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.animationDelay = `${Math.random() * 2}s`;
+                conf.style.animationDuration = `${1.5 + Math.random() * 2.5}s`;
+                conf.style.borderRadius = Math.random() > 0.5 ? '50%' : '3px';
+                wrapper.appendChild(conf);
+            }
+        }
+
+        function restartGame() {
+            document.getElementById('end-screen').classList.add('hidden');
+            document.getElementById('student-name').value = "";
+            document.getElementById('welcome-screen').classList.remove('hidden');
+            selectDifficulty('facile'); // Réinitialise sur facile
+            setTimeout(() => lucide.createIcons(), 50);
+        }
+
+        // --- POPUPS ET MODALS ---
+
+        function showExitConfirmation() {
+            document.getElementById('exit-modal').classList.remove('hidden');
+            setTimeout(() => lucide.createIcons(), 50);
+        }
+
+        function hideExitConfirmation() {
+            document.getElementById('exit-modal').classList.add('hidden');
+        }
+
+        function exitGame() {
+            hideExitConfirmation();
+            clearSavedSession(); // Abandon volontaire : on supprime la session active
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('end-screen').classList.add('hidden');
+            document.getElementById('welcome-screen').classList.remove('hidden');
+            setTimeout(() => lucide.createIcons(), 50);
+        }
+
+        // --- GESTION DE L'ESPACE MAÎTRE / ENSEIGNANT ---
+        function openTeacherModal() {
+            document.getElementById('teacher-auth-modal').classList.remove('hidden');
+            document.getElementById('teacher-code').value = "";
+            document.getElementById('auth-error').classList.add('hidden');
+            
+            // Afficher l'indice configuré par l'enseignant
+            const hint = localStorage.getItem('detective_teacher_hint') || "Aucun indice configuré.";
+            document.getElementById('teacher-hint-display').innerText = hint;
+            
+            setTimeout(() => document.getElementById('teacher-code').focus(), 100);
+        }
+
+        function closeTeacherModal() {
+            document.getElementById('teacher-auth-modal').classList.add('hidden');
+        }
+
+        function submitTeacherCode() {
+            const code = document.getElementById('teacher-code').value.trim();
+            const savedPassword = localStorage.getItem('detective_teacher_mdp') || "07101995"; // Fallback de sécurité
+            if (code === savedPassword) {
+                closeTeacherModal();
+                openTeacherDashboard();
+            } else {
+                document.getElementById('auth-error').classList.remove('hidden');
+            }
+        }
+
+        async function openTeacherDashboard() {
+            document.getElementById('teacher-dashboard').classList.remove('hidden');
+            const tbody = document.getElementById('scores-table-body');
+            tbody.innerHTML = "<tr><td colspan='5' class='p-6 text-center text-slate-500 font-handwritten'>Chargement des scores...</td></tr>";
+
+            if (window.fetchScoresFromFirebase) {
+                const scores = await window.fetchScoresFromFirebase();
+                tbody.innerHTML = "";
+
+                if (scores.length === 0) {
+                    document.getElementById('no-scores-message').classList.remove('hidden');
+                } else {
+                    document.getElementById('no-scores-message').classList.add('hidden');
+                    scores.forEach(row => {
+                        const dateObj = new Date(row.timestamp);
+                        const formattedDate = dateObj.toLocaleDateString('fr-FR') + ' à ' + dateObj.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
+                        
+                        // Détermination de la couleur de performance
+                        let performanceColor = "text-red-500";
+                        let performanceText = "En cours d'acquisition 🎯";
+                        if (row.score === 5) {
+                            performanceColor = "text-emerald-600";
+                            performanceText = "Excellent ! ⭐️⭐️⭐️";
+                        } else if (row.score >= 3) {
+                            performanceColor = "text-sky-600";
+                            performanceText = "Acquis ! 👍";
+                        }
+
+                        // Style de badge difficulté
+                        let dBadge = "";
+                        if (row.difficulty === 'facile') {
+                            dBadge = `<span class="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full">Facile</span>`;
+                        } else if (row.difficulty === 'normale') {
+                            dBadge = `<span class="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded-full">Normale</span>`;
+                        } else {
+                            dBadge = `<span class="bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded-full">Difficile</span>`;
+                        }
+
+                        const tr = document.createElement('tr');
+                        tr.className = "hover:bg-amber-50/40 transition-colors";
+                        tr.innerHTML = `
+                            <td class="p-4 text-slate-800 text-lg">${row.name}</td>
+                            <td class="p-4">${dBadge}</td>
+                            <td class="p-4 text-slate-500 text-sm font-sans">${formattedDate}</td>
+                            <td class="p-4 text-center text-xl text-amber-600">${row.score} / ${row.total} ⭐</td>
+                            <td class="p-4 ${performanceColor} text-sm">${performanceText}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            }
+            setTimeout(() => lucide.createIcons(), 50);
+        }
+
+        function closeTeacherDashboard() {
+            document.getElementById('teacher-dashboard').classList.add('hidden');
+        }
+
+        async function exportToExcel() {
+            if (!window.fetchScoresFromFirebase) return;
+            const scores = await window.fetchScoresFromFirebase();
+            
+            if (scores.length === 0) {
+                const noScoresMsg = document.getElementById('no-scores-message');
+                if (noScoresMsg) {
+                    noScoresMsg.innerText = "Aucun score disponible pour l'exportation !";
+                    noScoresMsg.classList.remove('hidden');
+                    setTimeout(() => {
+                        noScoresMsg.innerText = "Aucun élève n'a encore validé sa grille d'enquêtes pour le moment !";
+                    }, 4000);
+                }
+                return;
+            }
+
+            // Génération d'un fichier CSV formaté pour Microsoft Excel (séparateur point-virgule et BOM UTF-8)
+            let csvContent = "\ufeff"; // BOM UTF-8 pour supporter les accents
+            csvContent += "sep=;\n"; // Force Excel à utiliser le point-virgule comme délimiteur
+            csvContent += "Prénom de l'élève;Difficulté;Date de l'enquête;Score obtenu;Total;Performance\n";
+
+            scores.forEach(row => {
+                const dateObj = new Date(row.timestamp);
+                const formattedDate = dateObj.toLocaleDateString('fr-FR') + ' ' + dateObj.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
+                
+                let performanceText = "En cours d'acquisition";
+                if (row.score === 5) {
+                    performanceText = "Excellent";
+                } else if (row.score >= 3) {
+                    performanceText = "Acquis";
+                }
+
+                // Sécurisation du prénom
+                const safeName = (row.name || "").replace(/"/g, '""');
+                csvContent += `"${safeName}";"${row.difficulty}";"${formattedDate}";${row.score};${row.total};"${performanceText}"\n`;
+            });
+
+            try {
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", `scores_detective_donnees_${new Date().toISOString().slice(0,10)}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (e) {
+                console.error("Erreur lors de la génération du fichier Excel :", e);
+            }
+        }
+
+        async function clearScores() {
+            if (window.clearAllScores) {
+                const tbody = document.getElementById('scores-table-body');
+                tbody.innerHTML = "<tr><td colspan='5' class='p-6 text-center text-red-500'>Vitage en cours...</td></tr>";
+                await window.clearAllScores();
+                openTeacherDashboard();
+            }
+        }
+
+        function checkSetup() {
+            const hasMdp = localStorage.getItem('detective_teacher_mdp');
+            if (!hasMdp) {
+                document.getElementById('setup-screen').classList.remove('hidden');
+                document.getElementById('welcome-screen').classList.add('hidden');
+                return false;
+            } else {
+                document.getElementById('setup-screen').classList.add('hidden');
+                document.getElementById('welcome-screen').classList.remove('hidden');
+                return true;
+            }
+        }
+
+        function saveSetup() {
+            const mdpInput = document.getElementById('setup-password').value.trim();
+            const hintInput = document.getElementById('setup-hint').value.trim();
+            const setupError = document.getElementById('setup-error');
+
+            if (mdpInput === "" || hintInput === "") {
+                setupError.classList.remove('hidden');
+                return;
+            }
+
+            setupError.classList.add('hidden');
+            localStorage.setItem('detective_teacher_mdp', mdpInput);
+            localStorage.setItem('detective_teacher_hint', hintInput);
+
+            if (checkSetup()) {
+                // Si la configuration est réussie, on vérifie s'il y a une session élève active
+                checkActiveSession();
+            }
+            setTimeout(() => lucide.createIcons(), 50);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            selectDifficulty('facile'); // Initialise l'UI sur facile par défaut
+            const isSetupDone = checkSetup();
+            if (isSetupDone) {
+                checkActiveSession(); // On vérifie si un élève a une session interrompue à reprendre
+            }
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
